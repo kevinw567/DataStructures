@@ -3,9 +3,10 @@
  * standard library. 
  */
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
-public class List<T> {
+public class List<T> implements Iterable<T> {
     // the list that stores the elements
     private T[] elements;
     // the number of elements in the list
@@ -15,19 +16,13 @@ public class List<T> {
 
     public List() {
         // default size is 10
-        capacity = 10;
         elements = (T[]) new Object[10];
+        capacity = 10;
     }
 
     public List(int size) {
-        elements = (T[]) new Object[10];
+        elements = (T[]) new Object[size];
         this.capacity = size;
-    }
-    
-    public List(List<T> list) {
-        for (int i = 0; i < list.size(); i++) {
-            elements[i] = list.elements[i];
-        }
     }
 
     /**
@@ -40,8 +35,9 @@ public class List<T> {
     }
 
     /**
+     * Return the maximum number of elementsthis list can hold
      * 
-     * @return the size of the list
+     * @return the maximum number of elements this list can hold
      */
     public int capacity() {
         return capacity;
@@ -64,12 +60,14 @@ public class List<T> {
      * @return true if the element is in the list and false otherwise
      */
     public boolean contains(T element) {
+        // iterate over the list, checking for the element to look for
         for (int i = 0; i < size; i++) {
             if (elements[i] == element) {
                 return true;
             }
         }
 
+        // if this is reached the element is not in the list
         return false;
     }
 
@@ -80,6 +78,7 @@ public class List<T> {
      * @return void
      */
     public void add(T element) {
+        // if the list is 3/4 full resize to double the size
         if (size + 1 >= capacity * 0.75) {
             resize(capacity * 2);
         }
@@ -98,6 +97,7 @@ public class List<T> {
      * @return void
      */
     public void add(int index, T element) {
+        // if the list is 3/4 full resize to double the size
         if (size + 1 >= capacity * 0.75) {
             resize(capacity * 2);
         }
@@ -122,9 +122,16 @@ public class List<T> {
      * 
      * @param index the index of the element to remove
      */
-    public void remove(int index) {
+    public void remove(int index) throws IndexOutOfBoundsException {
+        // if index is out of bounds throw an exception
+        if (index < 0 || index > size - 1) {
+            System.out.println(index);
+            throw new IndexOutOfBoundsException();
+        }
+    
+        // shift all the elements after the deleted element towards the front
         for (int i = index; i < size; i++) {
-            if (i + 1 < size) {
+            if (i + 1 <= size) {
                 elements[i] = elements[i + 1];
                 elements[i + 1] = null;
             }
@@ -138,20 +145,32 @@ public class List<T> {
     }
 
     /**
+     * Return a ListIterator for this list
+     * 
+     * @param list the list to iterate over
+     * 
+     * @return the ListItertor to iterate over this list
+     */
+    public Iterator<T> iterator() {
+        return new ListIterator();
+    }
+
+    /**
      * Resize the list to the current size and change the max capacity
      * 
      * @param newCap the new capacity of the list
      */
     private void resize(int newCap) {
-        System.out.println("Newcap: " + newCap);
         T[] temp = (T[]) new Object[newCap];
         capacity = newCap;
         for (int i = 0; i < size; i++) {
             temp[i] = elements[i];
         }
 
-        elements = temp;
+        this.elements = temp;
     }
+
+    
 
     /**
      * Return the list as a string
@@ -160,10 +179,9 @@ public class List<T> {
      */
     @Override
     public String toString() {
-        String s = "";
-        s += "[";
+        String s = "[";
         // add all items in the list to the string s
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < capacity; i++) {
             s += elements[i] + ", ";
         }
 
@@ -179,41 +197,70 @@ public class List<T> {
 
     public static void main(String[] args) {
         List<Integer> l = new List<>();
-        System.out.println("Default size list: " + l.capacity);
-        List<Integer> l1 = new List<>(11);
-        System.out.println("Initialized size list: " + l1.capacity);
+        List<Object> pList = new List<>();
         Random rand = new Random();
-        int loops = rand.nextInt(10);
-        System.out.println("Loops: " + loops);
-        for (int i = 0; i < loops; i++) {
+        System.out.println("Is a new list empty? " + l.isEmpty());
+        System.out.println("Adding to list");
+        for (int i = 0; i < 5; i++) {
             l.add(rand.nextInt());
-            System.out.println("L = " + l);
-            if (rand.nextInt() % 2 == 0) {
-                System.out.println("L1 = " + l1);
-                l1.add(rand.nextInt());
-            }
+            System.out.print("Size = " + l.size() + " ");
+            System.out.println(l);
         }
 
-        System.out.println("List size: " + l.size());
         System.out.println(l);
-        System.out.println("List1 size: " + l1.size());
-        System.out.println(l1);
-    }
-}
-
-class ListIterator<T> implements Iterator<T> {
-    
-    public ListIterator() {
-        return;
-    }
-
-    public boolean hasNext() {
-        return;
+        System.out.println("Is the full list empty? " + l.isEmpty());
+        l.remove(l.size() - 1);
+        System.out.println("Removed last element " + l);
+        l.add(l.size(), rand.nextInt());
+        System.out.println("Testing contain (true) " + l.contains(l.get(0)));
+        System.out.println("Testing contain (false) " + l.contains(0));
+        for (int i : l) {
+            System.out.println(i);
+        }
     }
 
-    public T next() {
-        return;
+    class ListIterator extends List<T> implements Iterator<T> {
+        private int index;  // index of the current element
+
+        /**
+         * Create a ListIterator for the given list
+         * 
+         * @param list the list to iterate through
+         */
+        public ListIterator() {
+            index = 0;
+        }
+
+        /**
+         * Whether the list as another element after the current element
+         * 
+         * @return true if there is an element after the current element,
+         * false otherwise
+         */
+        public boolean hasNext() {
+            return index < List.this.size() - 1;
+        }
+
+        /**
+         * Return the next element in the list
+         * 
+         * @return the next element in the list
+         */
+        public T next() throws NoSuchElementException, IndexOutOfBoundsException {
+            try {
+                T next = List.this.get(index);
+                index++;
+                
+                return next;
+            }
+
+            catch (NoSuchElementException e) {
+                throw new NoSuchElementException();
+            }
+
+            catch (IndexOutOfBoundsException e) {
+                throw new IndexOutOfBoundsException();
+            }
+        }
     }
-
-
 }

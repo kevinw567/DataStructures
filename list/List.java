@@ -1,5 +1,6 @@
 /**
- * An implementation of the List package from the Java Standard Library.
+ * An implementation of the Java List class. This class implements the usual add(),
+ * size(), isEmpty(), contains(), get(), and remove().  
  * 
  */
 import java.util.Iterator;
